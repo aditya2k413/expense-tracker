@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Categories</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Expense Tracker</h1>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="expenses.html">Expenses</a></li>
+            <li><a href="income.html">Income</a></li>
+            <li><a href="budgets.html">Budgets</a></li>
+            <li><a href="savings.html">Savings</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="ai.html">AI Insights</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Categories</h2>
+            <div class="table-container">
+                <table id="categories-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form id="add-category-form">
+            <h2>Add Category</h2>
+            <input type="hidden" id="category-id">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="type">Type</label>
+                <select id="type" required>
+                    <option value="EXPENSE">EXPENSE</option>
+                    <option value="INCOME">INCOME</option>
+                </select>
+            </div>
+            <button type="submit" id="submit-btn">Add Category</button>
+            <button type="button" id="cancel-btn" onclick="resetForm()" style="display:none;">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        async function loadCategories() {
+            try {
+                const response = await fetch('/categories');
+                const tbody = document.querySelector('#categories-table tbody');
+                tbody.innerHTML = '';
+                if (response.ok) {
+                    const categories = await response.json();
+                    categories.forEach(category => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${category.name}</td>
+                            <td>${category.type}</td>
+                            <td>
+                                <button onclick="editCategory(${category.id}, '${category.name}', '${category.type}')">Edit</button>
+                                <button class="delete-btn" onclick="deleteCategory(${category.id})">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else if (response.status === 404) {
+                    tbody.innerHTML = '<tr><td colspan="3">No data found</td></tr>';
+                } else {
+                    throw new Error('Failed to load categories');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showMessage('Failed to load categories.', 'error');
+            }
+        }
+
+        async function addCategory(event) {
+            event.preventDefault();
+            const id = document.getElementById('category-id').value;
+            const name = document.getElementById('name').value;
+            const type = document.getElementById('type').value;
+
+            const category = {
+                id: id ? parseInt(id) : undefined,
+                name,
+                type,
+                user: { id: 1 }
+            };
+
+            try {
+                const response = id ?
+                    await fetch(`/categories/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(category)
+                    }) :
+                    await fetch('/categories', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(category)
+                    });
+
+                if (response.ok) {
+                    showMessage('Category ' + (id ? 'updated' : 'added') + ' successfully.', 'success');
+                    resetForm();
+                    loadCategories();
+                } else {
+                    throw new Error('Failed to ' + (id ? 'update' : 'add') + ' category');
+                }
+            } catch (error) {
+                console.error('Error ' + (id ? 'updating' : 'adding') + ' category:', error);
+                showMessage('Failed to ' + (id ? 'update' : 'add') + ' category.', 'error');
+            }
+        }
+
+        async function deleteCategory(id) {
+            try {
+                const response = await fetch(`/categories/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showMessage('Category deleted successfully.', 'success');
+                    loadCategories();
+                } else {
+                    throw new Error('Failed to delete category');
+                }
+            } catch (error) {
+                console.error('Error deleting category:', error);
+                showMessage('Failed to delete category.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const container = document.querySelector('.container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.insertBefore(message, container.firstChild);
+            setTimeout(() => message.remove(), 5000);
+        }
+
+        function resetForm() {
+            document.getElementById('add-category-form').reset();
+            document.getElementById('category-id').value = '';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('submit-btn').textContent = 'Add Category';
+        }
+
+        function editCategory(id, name, type) {
+            document.getElementById('category-id').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('type').value = type;
+            document.getElementById('submit-btn').textContent = 'Update Category';
+            document.getElementById('cancel-btn').style.display = 'inline';
+            document.getElementById('add-category-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.onload = () => {
+            loadCategories();
+            document.getElementById('add-category-form').addEventListener('submit', addCategory);
+        };
+    </script>
+</body>
+</html>

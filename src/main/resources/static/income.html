@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Income</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Expense Tracker</h1>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="expenses.html">Expenses</a></li>
+            <li><a href="income.html">Income</a></li>
+            <li><a href="budgets.html">Budgets</a></li>
+            <li><a href="savings.html">Savings</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="ai.html">AI Insights</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="filter-section">
+            <label for="month-select">Month:</label>
+            <select id="month-select">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+            <label for="year-select">Year:</label>
+            <select id="year-select">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
+            <label for="category-filter">Category:</label>
+            <select id="category-filter">
+                <option value="">All Categories</option>
+                <!-- Options will be loaded -->
+            </select>
+            <button onclick="loadIncome()">Apply</button>
+        </div>
+
+        <div class="card">
+            <h2>Income</h2>
+            <div class="table-container">
+                <table id="income-table">
+                    <thead>
+                        <tr>
+                            <th>Amount</th>
+                            <th>Source</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form id="add-income-form">
+            <h2>Add Income</h2>
+            <input type="hidden" id="income-id">
+            <div class="form-group">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="source">Source</label>
+                <input type="text" id="source" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" required>
+                    <!-- Options will be loaded -->
+                </select>
+            </div>
+            <button type="submit" id="submit-btn">Add Income</button>
+            <button type="button" id="cancel-btn" onclick="resetForm()" style="display:none;">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        let allIncomes = [];
+
+        async function loadIncome() {
+            try {
+                const month = document.getElementById('month-select').value;
+                const year = document.getElementById('year-select').value;
+                const response = await fetch(`/income/by-month?month=${month}&year=${year}`);
+                if (response.ok) {
+                    allIncomes = await response.json();
+                    document.getElementById('category-filter').value = '';
+                    filterAndRender();
+                } else if (response.status === 404) {
+                    allIncomes = [];
+                    filterAndRender();
+                } else {
+                    throw new Error('Failed to load income');
+                }
+            } catch (error) {
+                console.error('Error loading income:', error);
+                showMessage('Failed to load income.', 'error');
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/categories');
+                const select = document.getElementById('category');
+                const filterSelect = document.getElementById('category-filter');
+                select.innerHTML = '';
+                filterSelect.innerHTML = '<option value="">All Categories</option>';
+                if (response.ok) {
+                    const categories = await response.json();
+                    categories.filter(category => category.type === 'INCOME').forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.textContent = category.name;
+                        select.appendChild(option);
+
+                        const filterOption = document.createElement('option');
+                        filterOption.value = category.id;
+                        filterOption.textContent = category.name;
+                        filterSelect.appendChild(filterOption);
+                    });
+                } else if (response.status === 404) {
+                    // No categories
+                } else {
+                    throw new Error('Failed to load categories');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function addIncome(event) {
+            event.preventDefault();
+            const id = document.getElementById('income-id').value;
+            const amount = document.getElementById('amount').value;
+            const source = document.getElementById('source').value;
+            const description = document.getElementById('description').value;
+            const date = document.getElementById('date').value;
+            const categoryId = document.getElementById('category').value;
+
+            const income = {
+                id: id ? parseInt(id) : undefined,
+                amount: parseFloat(amount),
+                source,
+                description,
+                date,
+                user: { id: 1 },
+                category: { id: parseInt(categoryId) }
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/income/${id}` : '/income';
+            const successMessage = id ? 'Income updated successfully.' : 'Income added successfully.';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(income)
+                });
+                if (response.ok) {
+                    showMessage(successMessage, 'success');
+                    resetForm();
+                    loadIncome();
+                } else {
+                    throw new Error(`Failed to ${id ? 'update' : 'add'} income`);
+                }
+            } catch (error) {
+                console.error(`Error ${id ? 'updating' : 'adding'} income:`, error);
+                showMessage(`Failed to ${id ? 'update' : 'add'} income.`, 'error');
+            }
+        }
+
+        async function deleteIncome(id) {
+            try {
+                const response = await fetch(`/income/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showMessage('Income deleted successfully.', 'success');
+                    loadIncome();
+                } else {
+                    throw new Error('Failed to delete income');
+                }
+            } catch (error) {
+                console.error('Error deleting income:', error);
+                showMessage('Failed to delete income.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const container = document.querySelector('.container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.insertBefore(message, container.firstChild);
+            setTimeout(() => message.remove(), 5000);
+        }
+
+        function resetForm() {
+            document.getElementById('add-income-form').reset();
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('submit-btn').textContent = 'Add Income';
+            document.getElementById('income-id').value = '';
+        }
+
+        function editIncome(id, amount, source, description, date, categoryId) {
+            document.getElementById('income-id').value = id;
+            document.getElementById('amount').value = amount;
+            document.getElementById('source').value = source;
+            document.getElementById('description').value = description;
+            document.getElementById('date').value = date;
+            document.getElementById('category').value = categoryId;
+            document.getElementById('submit-btn').textContent = 'Update Income';
+            document.getElementById('cancel-btn').style.display = 'inline';
+            document.getElementById('add-income-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function filterAndRender() {
+            const categoryId = document.getElementById('category-filter').value;
+            const filteredIncomes = categoryId ? allIncomes.filter(income => income.category && income.category.id == categoryId) : allIncomes;
+            const tbody = document.querySelector('#income-table tbody');
+            tbody.innerHTML = '';
+            filteredIncomes.forEach(income => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>₹${parseFloat(income.amount).toFixed(2)}</td>
+                    <td>${income.source}</td>
+                    <td>${income.description}</td>
+                    <td>${income.date}</td>
+                    <td>
+                        <button onclick="editIncome(${income.id}, '${income.amount}', '${income.source}', '${income.description}', '${income.date}', ${income.category ? income.category.id : 0})">Edit</button>
+                        <button class="delete-btn" onclick="deleteIncome(${income.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (filteredIncomes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No data found</td></tr>';
+            }
+        }
+
+        window.onload = () => {
+            const now = new Date();
+            document.getElementById('month-select').value = now.getMonth() + 1;
+            document.getElementById('year-select').value = now.getFullYear();
+            loadIncome();
+            loadCategories();
+            document.getElementById('add-income-form').addEventListener('submit', addIncome);
+            document.getElementById('category-filter').addEventListener('change', filterAndRender);
+        };
+    </script>
+</body>
+</html>

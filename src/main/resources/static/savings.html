@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Savings</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Expense Tracker</h1>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="expenses.html">Expenses</a></li>
+            <li><a href="income.html">Income</a></li>
+            <li><a href="budgets.html">Budgets</a></li>
+            <li><a href="savings.html">Savings</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="ai.html">AI Insights</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Savings Goals</h2>
+            <div class="table-container">
+                <table id="savings-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Target Amount</th>
+                            <th>Current Amount</th>
+                            <th>Deadline</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <form id="add-savings-form">
+            <h2>Add Savings Goal</h2>
+            <input type="hidden" id="savings-id">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="targetAmount">Target Amount</label>
+                <input type="number" id="targetAmount" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="currentAmount">Current Amount</label>
+                <input type="number" id="currentAmount" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="deadline">Deadline</label>
+                <input type="date" id="deadline" required>
+            </div>
+            <button type="submit" id="submit-btn">Add Savings Goal</button>
+            <button type="button" id="cancel-btn" onclick="resetForm()" style="display:none;">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        async function loadSavings() {
+            try {
+                const response = await fetch('/savings');
+                const tbody = document.querySelector('#savings-table tbody');
+                tbody.innerHTML = '';
+                if (response.ok) {
+                    const savings = await response.json();
+                    savings.forEach(saving => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${saving.name}</td>
+                            <td>₹${parseFloat(saving.targetAmount).toFixed(2)}</td>
+                            <td>₹${parseFloat(saving.currentAmount).toFixed(2)}</td>
+                            <td>${saving.deadline}</td>
+                            <td>
+                                <button onclick="editSavings(${saving.id}, '${saving.name}', '${saving.targetAmount}', '${saving.currentAmount}', '${saving.deadline}')">Edit</button>
+                                <button class="delete-btn" onclick="deleteSavings(${saving.id})">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else if (response.status === 404) {
+                    tbody.innerHTML = '<tr><td colspan="5">No data found</td></tr>';
+                } else {
+                    throw new Error('Failed to load savings');
+                }
+            } catch (error) {
+                console.error('Error loading savings:', error);
+                showMessage('Failed to load savings.', 'error');
+            }
+        }
+
+        async function addSavings(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const targetAmount = document.getElementById('targetAmount').value;
+            const currentAmount = document.getElementById('currentAmount').value;
+            const deadline = document.getElementById('deadline').value;
+            const id = document.getElementById('savings-id').value;
+
+            const savingsGoal = {
+                name,
+                targetAmount: parseFloat(targetAmount),
+                currentAmount: parseFloat(currentAmount),
+                deadline,
+                user: { id: 1 }
+            };
+
+            try {
+                const response = id
+                    ? await fetch(`/savings/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(savingsGoal)
+                    })
+                    : await fetch('/savings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(savingsGoal)
+                    });
+
+                if (response.ok) {
+                    showMessage('Savings goal saved successfully.', 'success');
+                    document.getElementById('add-savings-form').reset();
+                    loadSavings();
+                } else {
+                    throw new Error('Failed to save savings goal');
+                }
+            } catch (error) {
+                console.error('Error saving savings goal:', error);
+                showMessage('Failed to save savings goal.', 'error');
+            }
+        }
+
+        async function deleteSavings(id) {
+            try {
+                const response = await fetch(`/savings/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    showMessage('Savings goal deleted successfully.', 'success');
+                    loadSavings();
+                } else {
+                    throw new Error('Failed to delete savings goal');
+                }
+            } catch (error) {
+                console.error('Error deleting savings goal:', error);
+                showMessage('Failed to delete savings goal.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const container = document.querySelector('.container');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            container.insertBefore(message, container.firstChild);
+            setTimeout(() => message.remove(), 5000);
+        }
+
+        function resetForm() {
+            document.getElementById('add-savings-form').reset();
+            document.getElementById('savings-id').value = '';
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('submit-btn').textContent = 'Add Savings Goal';
+        }
+
+        function editSavings(id, name, targetAmount, currentAmount, deadline) {
+            document.getElementById('savings-id').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('targetAmount').value = targetAmount;
+            document.getElementById('currentAmount').value = currentAmount;
+            document.getElementById('deadline').value = deadline;
+            document.getElementById('submit-btn').textContent = 'Update Savings Goal';
+            document.getElementById('cancel-btn').style.display = 'inline';
+            document.getElementById('add-savings-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.onload = () => {
+            loadSavings();
+            document.getElementById('add-savings-form').addEventListener('submit', addSavings);
+        };
+    </script>
+</body>
+</html>

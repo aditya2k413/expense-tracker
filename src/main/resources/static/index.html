@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Expense Tracker</h1>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="expenses.html">Expenses</a></li>
+            <li><a href="income.html">Income</a></li>
+            <li><a href="budgets.html">Budgets</a></li>
+            <li><a href="savings.html">Savings</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="ai.html">AI Insights</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="filter-section">
+            <label for="month-select">Month:</label>
+            <select id="month-select">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+            <label for="year-select">Year:</label>
+            <select id="year-select">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+            </select>
+            <button onclick="loadSummary()">Apply</button>
+        </div>
+
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Expenses</h3>
+                <p id="total-expenses">$0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Income</h3>
+                <p id="total-income">$0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Savings Goals</h3>
+                <p id="total-savings">$0.00</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Category Budget Overview</h2>
+            <div class="table-container">
+                <table id="budget-overview-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Spent</th>
+                            <th>Budget Limit</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadSummary() {
+            const month = document.getElementById('month-select').value;
+            const year = document.getElementById('year-select').value;
+            try {
+                // Load expenses
+                const expensesResponse = await fetch(`/expenses/by-month?month=${month}&year=${year}`);
+                let totalExpenses = 0;
+                if (expensesResponse.ok) {
+                    const expenses = await expensesResponse.json();
+                    totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+                } else if (expensesResponse.status === 404) {
+                    // No data
+                } else {
+                    throw new Error('Failed to load expenses');
+                }
+                document.getElementById('total-expenses').textContent = `₹${totalExpenses.toFixed(2)}`;
+
+                // Load income
+                const incomeResponse = await fetch(`/income/by-month?month=${month}&year=${year}`);
+                let totalIncome = 0;
+                if (incomeResponse.ok) {
+                    const incomes = await incomeResponse.json();
+                    totalIncome = incomes.reduce((sum, inc) => sum + parseFloat(inc.amount), 0);
+                } else if (incomeResponse.status === 404) {
+                    // No data
+                } else {
+                    throw new Error('Failed to load income');
+                }
+                document.getElementById('total-income').textContent = `₹${totalIncome.toFixed(2)}`;
+
+                // Load savings
+                const savingsResponse = await fetch('/savings');
+                let totalSavings = 0;
+                if (savingsResponse.ok) {
+                    const savings = await savingsResponse.json();
+                    totalSavings = savings.reduce((sum, sav) => sum + parseFloat(sav.targetAmount), 0);
+                } else if (savingsResponse.status === 404) {
+                    // No data
+                } else {
+                    throw new Error('Failed to load savings');
+                }
+                document.getElementById('total-savings').textContent = `₹${totalSavings.toFixed(2)}`;
+
+                // Load budget overview
+                await loadBudgetOverview(month, year);
+
+            } catch (error) {
+                console.error('Error loading summary:', error);
+                // Show error message
+                const container = document.querySelector('.container');
+                const message = document.createElement('div');
+                message.className = 'message error';
+                message.textContent = 'Failed to load summary data.';
+                container.appendChild(message);
+            }
+        }
+
+        async function loadBudgetOverview(month, year) {
+            try {
+                const expensesByCategoryResponse = await fetch(`/expenses/by-category?month=${month}&year=${year}`);
+                const budgetsResponse = await fetch('/budgets');
+
+                let expensesByCategory = {};
+                if (expensesByCategoryResponse.ok) {
+                    expensesByCategory = await expensesByCategoryResponse.json();
+                }
+
+                let budgets = [];
+                if (budgetsResponse.ok) {
+                    budgets = await budgetsResponse.json();
+                }
+
+                // Create a map of budgets by category name
+                const budgetsByCategory = {};
+                budgets.forEach(budget => {
+                    const categoryName = budget.category ? budget.category.name : 'Uncategorized';
+                    budgetsByCategory[categoryName] = parseFloat(budget.limitAmount);
+                });
+
+                // Get all unique categories
+                const allCategories = new Set([...Object.keys(expensesByCategory), ...Object.keys(budgetsByCategory)]);
+
+                const tbody = document.querySelector('#budget-overview-table tbody');
+                tbody.innerHTML = '';
+
+                allCategories.forEach(category => {
+                    const spent = expensesByCategory[category] ? parseFloat(expensesByCategory[category]) : 0;
+                    const limit = budgetsByCategory[category] || null;
+                    const remaining = limit !== null ? limit - spent : null;
+                    let status = '';
+                    let statusColor = '';
+
+                    if (limit === null) {
+                        status = 'No Budget Set';
+                        statusColor = 'gray';
+                    } else {
+                        const percentage = (spent / limit) * 100;
+                        if (percentage < 80) {
+                            status = '✅ Under Budget';
+                            statusColor = 'green';
+                        } else if (percentage < 100) {
+                            status = '⚠️ Near Limit';
+                            statusColor = 'orange';
+                        } else {
+                            status = '❌ Over Budget';
+                            statusColor = 'red';
+                        }
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${category}</td>
+                        <td>₹${spent.toFixed(2)}</td>
+                        <td>${limit !== null ? `₹${limit.toFixed(2)}` : 'No Budget Set'}</td>
+                        <td>${remaining !== null ? `₹${remaining.toFixed(2)}` : 'N/A'}</td>
+                        <td style="color: ${statusColor};">${status}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error loading budget overview:', error);
+            }
+        }
+
+        window.onload = () => {
+            const now = new Date();
+            document.getElementById('month-select').value = now.getMonth() + 1;
+            document.getElementById('year-select').value = now.getFullYear();
+            loadSummary();
+        };
+    </script>
+</body>
+</html>

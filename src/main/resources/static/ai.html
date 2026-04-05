@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - AI Insights</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Expense Tracker</h1>
+        <ul>
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="expenses.html">Expenses</a></li>
+            <li><a href="income.html">Income</a></li>
+            <li><a href="budgets.html">Budgets</a></li>
+            <li><a href="savings.html">Savings</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="ai.html">AI Insights</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>Monthly Spending Summary</h2>
+            <div class="form-group">
+                <label for="summary-month">Month:</label>
+                <select id="summary-month">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                <label for="summary-year">Year:</label>
+                <select id="summary-year">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+                <button onclick="getSummary()">Get Summary</button>
+            </div>
+            <div id="summary-loading" style="display:none;">Analyzing your finances...</div>
+            <div id="summary-response"></div>
+        </div>
+
+        <div class="card">
+            <h2>Budget Suggestions</h2>
+            <button onclick="getBudgetSuggestions()">Get Budget Suggestions</button>
+            <div id="budget-loading" style="display:none;">Analyzing your finances...</div>
+            <div id="budget-response"></div>
+        </div>
+
+        <div class="card">
+            <h2>Savings Advice</h2>
+            <button onclick="getSavingsAdvice()">Get Savings Advice</button>
+            <div id="savings-loading" style="display:none;">Analyzing your finances...</div>
+            <div id="savings-response"></div>
+        </div>
+    </div>
+
+    <script>
+        async function getSummary() {
+            const month = document.getElementById('summary-month').value;
+            const year = document.getElementById('summary-year').value;
+            document.getElementById('summary-loading').style.display = 'block';
+            document.getElementById('summary-response').innerHTML = '';
+            try {
+                const response = await fetch(`/ai/summary?month=${month}&year=${year}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    document.getElementById('summary-response').innerHTML = formatted;
+                } else {
+                    document.getElementById('summary-response').innerHTML = 'Error: ' + response.statusText;
+                }
+            } catch (error) {
+                document.getElementById('summary-response').innerHTML = 'Error: ' + error.message;
+            }
+            document.getElementById('summary-loading').style.display = 'none';
+        }
+
+        async function getBudgetSuggestions() {
+            document.getElementById('budget-loading').style.display = 'block';
+            document.getElementById('budget-response').innerHTML = '';
+            try {
+                const response = await fetch('/ai/budget-suggestions');
+                if (response.ok) {
+                    const text = await response.text();
+                    const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    document.getElementById('budget-response').innerHTML = formatted;
+                } else {
+                    document.getElementById('budget-response').innerHTML = 'Error: ' + response.statusText;
+                }
+            } catch (error) {
+                document.getElementById('budget-response').innerHTML = 'Error: ' + error.message;
+            }
+            document.getElementById('budget-loading').style.display = 'none';
+        }
+
+        async function getSavingsAdvice() {
+            document.getElementById('savings-loading').style.display = 'block';
+            document.getElementById('savings-response').innerHTML = '';
+            try {
+                const response = await fetch('/ai/savings-advice');
+                if (response.ok) {
+                    const text = await response.text();
+                    const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    document.getElementById('savings-response').innerHTML = formatted;
+                } else {
+                    document.getElementById('savings-response').innerHTML = 'Error: ' + response.statusText;
+                }
+            } catch (error) {
+                document.getElementById('savings-response').innerHTML = 'Error: ' + error.message;
+            }
+            document.getElementById('savings-loading').style.display = 'none';
+        }
+
+        window.onload = () => {
+            const now = new Date();
+            document.getElementById('summary-month').value = now.getMonth() + 1;
+            document.getElementById('summary-year').value = now.getFullYear();
+        };
+    </script>
+</body>
+</html>
