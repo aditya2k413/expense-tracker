@@ -15,6 +15,29 @@ A full-stack personal finance web application built with **Spring Boot**, **MySQ
 
 ---
 
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](screenshots/Dashboard.png)
+
+### Expenses
+![Expenses](screenshots/Expense.png)
+
+### Budgets
+![Budgets](screenshots/Budgets.png)
+
+### Categories
+![Categories](screenshots/Categories.png)
+
+### Saving Goals
+![Saving Goals](screenshots/SavingGoals.png)
+
+### AI Insights
+![Monthly Summary](screenshots/MonthlySpendingSummary.png)
+![Budget Suggestions](screenshots/BudgetSuggestions.png)
+![Savings Advice](screenshots/SavingsAdvice.png)
+---
+
 ## 🛠️ Tech Stack
 
 | Layer       | Technology                        |
