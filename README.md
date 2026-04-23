@@ -40,14 +40,14 @@ A full-stack personal finance web application built with **Spring Boot**, **MySQ
 
 ## 🛠️ Tech Stack
 
-| Layer       | Technology                        |
-|-------------|-----------------------------------|
-| Backend     | Java 17, Spring Boot 3.x          |
-| Frontend    | Plain HTML, CSS, JavaScript       |
-| Database    | MySQL, Spring Data JPA (Hibernate)|
-| AI          | Google Gemini AI API              |
-| Build Tool  | Maven                             |
-| IDE         | IntelliJ IDEA                     |
+| Layer       | Technology                          |
+|-------------|-------------------------------------|
+| Backend     | Java 17, Spring Boot 3.x            |
+| Frontend    | Plain HTML, CSS, JavaScript         |
+| Database    | MySQL, Spring Data JPA (Hibernate)  |
+| AI          | Google Gemini API (REST integration)|
+| Build Tool  | Maven                               |
+| IDE         | IntelliJ IDEA                       |
 
 ---
 
@@ -118,9 +118,10 @@ Visit `http://localhost:8080` in your browser.
 
 ## 🤖 AI Features
 
-The app integrates **Google Gemini AI** to provide:
-- A natural language **monthly spending summary** based on your transaction data
-- **Smart budget suggestions** tailored to your spending patterns
+The app integrates Google Gemini AI to provide:
+    - Monthly spending summary generated using transaction data
+    - Budget recommendations based on categorized expense analysis
+    - Savings suggestions based on income vs expense trends
 
 ---
 
