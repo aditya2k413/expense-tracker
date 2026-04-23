@@ -119,6 +119,7 @@ Visit `http://localhost:8080` in your browser.
 ## 🤖 AI Features
 
 The app integrates Google Gemini AI to provide:
+    
     - Monthly spending summary generated using transaction data
     - Budget recommendations based on categorized expense analysis
     - Savings suggestions based on income vs expense trends
