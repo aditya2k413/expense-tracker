@@ -1,17 +1,18 @@
 # 💸 Expense Tracker & Budget Manager
-A full-stack personal finance web application built with **Spring Boot**, **MySQL**, and **Google Gemini AI** — designed to help users track expenses, manage budgets, and get AI-powered financial insights.
+
+A full-stack personal finance web application built with **Spring Boot**, **PostgreSQL**, and **Google Gemini AI** — designed to help users track expenses, manage budgets, and get AI-powered financial insights.
 
 ---
 
 ## ✨ Features
 
-- **Dashboard** — Overview of income, expenses, and savings at a glance
-- **Expense & Income Tracking** — Add, view, and delete transactions with categories and dates
-- **Category Breakdown** — Visual charts showing spending by category
-- **Monthly Budget Limits** — Set budget caps and get notified when approaching them
-- **Savings Goals** — Define and track progress toward savings targets
-- **Custom Categories** — Create your own spending/income categories
-- **AI Insights (Gemini)** — Monthly spending summary and smart budget suggestions powered by Google Gemini AI
+- **Dashboard** — Overview of total income, expenses, and savings goals for any selected month/year
+- **Expense & Income Tracking** — Full CRUD with category assignment, date filtering, and inline editing
+- **Category Budget Overview** — Table showing spent vs. budget limit per category with status indicators (Under Budget / Near Limit / Over Budget)
+- **Monthly Budget Limits** — Set per-category spending caps and track usage
+- **Savings Goals** — Define and track progress toward savings targets with deadlines
+- **Custom Categories** — Create EXPENSE or INCOME type categories
+- **AI Insights (Gemini)** — Monthly spending summary, budget suggestions, and savings advice powered by Google Gemini 2.5 Flash
 
 ---
 
@@ -36,18 +37,19 @@ A full-stack personal finance web application built with **Spring Boot**, **MySQ
 ![Monthly Summary](screenshots/MonthlySpendingSummary.png)
 ![Budget Suggestions](screenshots/BudgetSuggestions.png)
 ![Savings Advice](screenshots/SavingsAdvice.png)
+
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer       | Technology                          |
-|-------------|-------------------------------------|
-| Backend     | Java 17, Spring Boot 3.x            |
-| Frontend    | Plain HTML, CSS, JavaScript         |
-| Database    | MySQL, Spring Data JPA (Hibernate)  |
-| AI          | Google Gemini API (REST integration)|
-| Build Tool  | Maven                               |
-| IDE         | IntelliJ IDEA                       |
+| Layer       | Technology                              |
+|-------------|-----------------------------------------|
+| Backend     | Java 17, Spring Boot 3.5.13             |
+| Frontend    | Plain HTML, CSS, JavaScript             |
+| Database    | PostgreSQL, Spring Data JPA (Hibernate) |
+| AI          | Google Gemini API (`gemini-2.5-flash`)  |
+| Build Tool  | Maven                                   |
+| IDE         | IntelliJ IDEA                           |
 
 ---
 
@@ -57,7 +59,7 @@ A full-stack personal finance web application built with **Spring Boot**, **MySQ
 src/
 └── main/
     ├── java/com/expensetracker/
-    │   ├── model/          # JPA entities (Expense, Income, Category, etc.)
+    │   ├── model/          # JPA entities (Expense, Income, Category, Budget, SavingsGoal, User)
     │   ├── repository/     # Spring Data JPA repositories
     │   ├── service/        # Business logic layer
     │   └── controller/     # REST API controllers
@@ -73,7 +75,7 @@ src/
 ### Prerequisites
 
 - Java 17+
-- MySQL 8.x
+- PostgreSQL 14+
 - Maven 3.x
 - A [Google Gemini API key](https://aistudio.google.com/app/apikey)
 
@@ -84,7 +86,7 @@ git clone https://github.com/aditya2k413/expense-tracker.git
 cd expense-tracker
 ```
 
-### 2. Create the MySQL database
+### 2. Create the PostgreSQL database
 
 ```sql
 CREATE DATABASE expense_tracker;
@@ -92,19 +94,24 @@ CREATE DATABASE expense_tracker;
 
 ### 3. Configure `application.properties`
 
-Create or edit `src/main/resources/application.properties`:
+Create `src/main/resources/application.properties` (see `application.properties.example` as a reference):
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/expense_tracker
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+spring.datasource.url=jdbc:postgresql://localhost:5432/expense_tracker
+spring.datasource.username=your_postgres_username
+spring.datasource.password=your_postgres_password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+spring.application.name=expense-tracker
 
 gemini.api.key=your_gemini_api_key
 ```
 
-> ⚠️ **Never commit your real credentials.** Use environment variables or a `.env` file in production.
+> ⚠️ `application.properties` is listed in `.gitignore` and must never be committed with real credentials.
 
 ### 4. Run the application
 
@@ -118,23 +125,17 @@ Visit `http://localhost:8080` in your browser.
 
 ## 🤖 AI Features
 
-The app integrates Google Gemini AI to provide:
-    
-    - Monthly spending summary generated using transaction data
-    - Budget recommendations based on categorized expense analysis
-    - Savings suggestions based on income vs expense trends
+Integrates Google Gemini (`gemini-2.5-flash`) to provide:
+
+- **Monthly Spending Summary** — Analyzes income vs. expenses by category for a selected month/year
+- **Budget Suggestions** — Recommends revised budget limits based on actual spending patterns
+- **Savings Advice** — Calculates projected goal completion dates and provides a prioritized action plan
 
 ---
 
 ## 🔒 Security Note
 
-`application.properties` is listed in `.gitignore` and should never be pushed with real credentials. Use the template above as a reference.
-
----
-
-## 📌 Status
-
-> 🚧 Actively in development — features being added incrementally.
+`application.properties` is excluded from version control via `.gitignore`. Use `application.properties.example` as a setup reference. Never commit real credentials.
 
 ---
 
