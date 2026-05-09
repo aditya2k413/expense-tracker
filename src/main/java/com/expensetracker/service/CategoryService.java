@@ -30,7 +30,6 @@ public class CategoryService {
         categoryRepository.deleteById(id);
     }
 
-    public List<Category> getByType(User user, CategoryType type) {
-        return categoryRepository.findByUserAndType(user, type);
-    }
+    public List<Category> getByType(User user, CategoryType type) {return categoryRepository.findByUserAndType(user, type);}
+    public Category findById(Long id) {return categoryRepository.findById(id).orElse(null);}
 }

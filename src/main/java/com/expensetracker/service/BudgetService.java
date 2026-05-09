@@ -1,6 +1,8 @@
 package com.expensetracker.service;
 
 import com.expensetracker.model.Budget;
+import com.expensetracker.model.Category;
+import com.expensetracker.model.CategoryType;
 import com.expensetracker.model.User;
 import com.expensetracker.repository.BudgetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,18 +12,50 @@ import java.util.List;
 
 @Service
 public class BudgetService {
+
     @Autowired
     private BudgetRepository budgetRepository;
+
+    @Autowired
+    private CategoryService categoryService;
 
     public List<Budget> getAll(User user) {
         return budgetRepository.findByUser(user);
     }
 
     public Budget add(Budget budget) {
+
+        Long categoryId = budget.getCategory().getId();
+
+        Category category =
+                categoryService.findById(categoryId);
+
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new RuntimeException(
+                    "Budget can only be created for expense categories"
+            );
+        }
+
+        budget.setCategory(category);
+
         return budgetRepository.save(budget);
     }
 
     public Budget update(Budget budget) {
+
+        Long categoryId = budget.getCategory().getId();
+
+        Category category =
+                categoryService.findById(categoryId);
+
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new RuntimeException(
+                    "Budget can only be created for expense categories"
+            );
+        }
+
+        budget.setCategory(category);
+
         return budgetRepository.save(budget);
     }
 

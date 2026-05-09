@@ -28,13 +28,30 @@ public class BudgetController {
 
     @PostMapping
     public ResponseEntity<?> saveBudget(@RequestBody Budget budget) {
-        if (budget.getLimitAmount() != null) return new ResponseEntity<>(budgetService.add(budget), HttpStatus.OK);
+
+        budget.setUser(userService.findById(1L));
+
+        if (budget.getLimitAmount() != null) {
+            return new ResponseEntity<>(
+                    budgetService.add(budget),
+                    HttpStatus.OK
+            );
+        }
+
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Budget> updateBudget(@PathVariable Long id, @RequestBody Budget budget) {
+    public ResponseEntity<Budget> updateBudget(
+            @PathVariable Long id,
+            @RequestBody Budget budget
+    ) {
+
+        budget.setId(id);
+        budget.setUser(userService.findById(1L));
+
         Budget updated = budgetService.update(budget);
+
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
