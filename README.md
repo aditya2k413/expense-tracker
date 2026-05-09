@@ -133,10 +133,19 @@ Integrates Google Gemini (`gemini-2.5-flash`) to provide:
 
 ---
 
-## 🔒 Security Note
+## ⚙️ Configuration & Security
 
 `application.properties` is excluded from version control via `.gitignore`. Use `application.properties.example` as a setup reference. Never commit real credentials.
 
+---
+
+## 🔐 Backend Architecture Notes
+
+- Backend-controlled entity ownership (clients cannot assign ownership manually)
+- Service-layer authorization checks for delete operations
+- Expense-only validation for budget categories
+- Default category initialization for newly registered users
+- User-scoped data isolation and ownership validation
 ---
 
 ## 👤 Author
