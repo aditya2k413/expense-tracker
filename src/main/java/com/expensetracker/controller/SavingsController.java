@@ -43,7 +43,7 @@ public class SavingsController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteSavingsGoalById(@PathVariable Long id) {
-        savingsGoalService.delete(id);
+        savingsGoalService.delete(id, userService.findById(1L));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

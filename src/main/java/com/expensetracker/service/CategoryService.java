@@ -26,8 +26,15 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    public void delete(Long id) {
-        categoryRepository.deleteById(id);
+    public void delete(Long id, User currentUser) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        if (category.getUser() == null || !category.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        categoryRepository.delete(category);
     }
 
     public List<Category> getByType(User user, CategoryType type) {return categoryRepository.findByUserAndType(user, type);}

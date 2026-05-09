@@ -59,8 +59,15 @@ public class BudgetService {
         return budgetRepository.save(budget);
     }
 
-    public void delete(Long id) {
-        budgetRepository.deleteById(id);
+    public void delete(Long id, User currentUser) {
+        Budget budget = budgetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        if (budget.getUser() == null || !budget.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        budgetRepository.delete(budget);
     }
 
     public List<Budget> getByMonthAndYear(User user, Integer month, Integer year) {

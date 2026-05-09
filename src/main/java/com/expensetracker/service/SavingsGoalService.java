@@ -25,7 +25,14 @@ public class SavingsGoalService {
         return savingsGoalRepository.save(savingsGoal);
     }
 
-    public void delete(Long id) {
-        savingsGoalRepository.deleteById(id);
+    public void delete(Long id, User currentUser) {
+        SavingsGoal savingsGoal = savingsGoalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        if (savingsGoal.getUser() == null || !savingsGoal.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        savingsGoalRepository.delete(savingsGoal);
     }
 }

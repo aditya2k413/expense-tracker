@@ -26,8 +26,15 @@ public class IncomeService {
         return incomeRepository.save(income);
     }
 
-    public void delete(Long id) {
-        incomeRepository.deleteById(id);
+    public void delete(Long id, User currentUser) {
+        Income income = incomeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found"));
+
+        if (income.getUser() == null || !income.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        incomeRepository.delete(income);
     }
 
     public List<Income> getIncomesByMonth(User user, int month, int year) {

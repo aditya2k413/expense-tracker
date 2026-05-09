@@ -29,8 +29,15 @@ public class ExpenseService {
         return expenseRepository.save(expense);
     }
 
-    public void deleteExpense(Long id) {
-        expenseRepository.deleteById(id);
+    public void deleteExpense(Long id, User currentUser) {
+        Expense expense = expenseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expense Not found"));
+
+        if (expense.getUser() == null || !expense.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        expenseRepository.delete(expense);
     }
 
     public Map<String, BigDecimal> getExpensesByCategoryFiltered(User user, Integer month, Integer year) {

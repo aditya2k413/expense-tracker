@@ -42,7 +42,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategoryById(@PathVariable Long id) {
-        categoryService.delete(id);
+        categoryService.delete(id, userService.findById(1L));
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
