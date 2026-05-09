@@ -28,12 +28,15 @@ public class IncomeController {
 
     @PostMapping
     public ResponseEntity<?> saveIncome(@RequestBody Income income) {
+        income.setUser(userService.findById(1L));
         if (income.getAmount() != null) return new ResponseEntity<>(incomeService.add(income), HttpStatus.OK);
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Income> updateIncome(@PathVariable Long id, @RequestBody Income income) {
+        income.setId(id);
+        income.setUser(userService.findById(1L));
         Income updated = incomeService.update(income);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }

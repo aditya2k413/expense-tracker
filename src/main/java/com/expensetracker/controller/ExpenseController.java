@@ -1,7 +1,6 @@
 package com.expensetracker.controller;
 
 import com.expensetracker.model.Expense;
-import com.expensetracker.model.User;
 import com.expensetracker.service.ExpenseService;
 import com.expensetracker.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +36,15 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<?> saveExpense(@RequestBody Expense expense){
-        if (expense.getAmount()!=null&&expense.getCategory()!=null&&!expense.getAmount().equals("")&&!expense.getCategory().equals("")) return new ResponseEntity<>(expenseService.addExpense(expense), HttpStatus.OK);
+        expense.setUser(userService.findById(1L));
+        if (expense.getAmount()!=null&&expense.getCategory()!=null) return new ResponseEntity<>(expenseService.addExpense(expense), HttpStatus.OK);
         return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Expense> updateExpense(@PathVariable Long id, @RequestBody Expense expense) {
+        expense.setId(id);
+        expense.setUser(userService.findById(1L));
         Expense updated = expenseService.update(expense);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }

@@ -28,11 +28,14 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<?> saveCategory(@RequestBody Category category) {
+        category.setUser(userService.findById(1L));
         return new ResponseEntity<>(categoryService.add(category), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category category) {
+        category.setId(id);
+        category.setUser(userService.findById(1L));
         Category updated = categoryService.update(category);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }

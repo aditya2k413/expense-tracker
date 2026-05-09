@@ -28,12 +28,15 @@ public class SavingsController {
 
     @PostMapping
     public ResponseEntity<?> saveSavingsGoal(@RequestBody SavingsGoal savingsGoal) {
+        savingsGoal.setUser(userService.findById(1L));
         if (savingsGoal.getTargetAmount() != null) return new ResponseEntity<>(savingsGoalService.add(savingsGoal), HttpStatus.OK);
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SavingsGoal> updateSavingsGoal(@PathVariable Long id, @RequestBody SavingsGoal savingsGoal) {
+        savingsGoal.setId(id);
+        savingsGoal.setUser(userService.findById(1L));
         SavingsGoal updated = savingsGoalService.update(savingsGoal);
         return new ResponseEntity<>(updated, HttpStatus.OK);
     }
